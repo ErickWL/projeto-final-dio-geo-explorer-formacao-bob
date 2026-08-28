@@ -1,8 +1,17 @@
-# DIO Explorer MCP
+# Geo-Explorer / DIO Explorer MCP
 
 Projeto educacional que combina uma base de conhecimento em JSON, prompts reutilizaveis para o GitHub Copilot e um servidor MCP (Model Context Protocol) para consulta controlada do catalogo.
 
 O catalogo e ficticio e serve para estudo. Ele nao representa ofertas, precos, eventos, certificados ou servicos oficiais da DIO.
+
+## O que e o Geo-Explorer
+
+O Geo-Explorer e o nome da experiencia educacional deste projeto: um explorador de trilhas de tecnologia que ajuda o estudante a escolher um caminho, praticar com desafios e registrar uma conclusao ficticia. A implementacao atual e chamada de DIO Explorer MCP porque o repositorio foi construido sobre esse catalogo demonstrativo.
+
+Ele possui duas formas complementares de uso:
+
+- **Comandos do Copilot:** prompts Markdown para estudar trilhas, gerar desafios e criar um certificado educacional.
+- **Servidor MCP:** endpoint HTTP autenticado que permite a clientes MCP consultar o catalogo por meio da tool `buscar_trilhas`.
 
 ## O que foi construido
 
@@ -13,6 +22,75 @@ O catalogo e ficticio e serve para estudo. Ele nao representa ofertas, precos, e
 - Desafio e certificado Java de exemplo em `DIO_explorer/docs/`.
 - Servidor MCP HTTP em `mcp/`, com a tool `buscar_trilhas`.
 - Testes automatizados para o catalogo, prompts, configuracao e controles de seguranca.
+
+## Como executar o projeto
+
+1. Instale Node.js 20 ou superior e npm.
+2. Instale as dependencias na raiz:
+
+```powershell
+npm install
+```
+
+3. Configure as variaveis obrigatorias conforme [.env.example](.env.example). Para uma execucao local no PowerShell:
+
+```powershell
+$env:MCP_API_TOKEN = 'gere-um-token-local'
+$env:MCP_SESSION_SECRET = 'gere-um-segredo-local'
+$env:CORS_ORIGIN = 'http://localhost:3000'
+$env:HTTPS_TERMINATION = 'reverse-proxy'
+$env:PORT = '3000'
+$env:NODE_ENV = 'development'
+npm start
+```
+
+O servidor sera iniciado em `127.0.0.1:3000`. Em uma publicacao, o reverse proxy deve terminar o HTTPS antes de encaminhar trafego para o Node.js. Para carregar um arquivo `.env` localmente, use `node --env-file=.env mcp/server.mjs`; esse arquivo nao deve ser versionado.
+
+## Como usar os comandos
+
+Os comandos ficam em `.github/prompts/` e podem ser usados no GitHub Copilot Chat ou no ambiente que reconheca prompts do workspace.
+
+### `/trilha`
+
+Informe uma tecnologia do catalogo:
+
+```text
+/trilha Java
+```
+
+O prompt consulta o JSON, valida a tecnologia e retorna um plano de estudos por modulos, nivel, XP, badges, lives, projeto final e criterios de conclusao.
+
+### `/desafio`
+
+Informe tecnologia e nivel separados por virgula:
+
+```text
+/desafio Python, intermediario
+```
+
+Os niveis validos sao `iniciante`, `intermediario` e `avancado`. O resultado e um desafio ficticio com contexto, requisitos, exemplos, restricoes, avaliacao, dica, XP e tempo estimado, sem entregar a solucao completa.
+
+### `/certificado`
+
+Informe o nome do estudante e o nome exato da trilha:
+
+```text
+/certificado Erick Silva, Java e Spring Boot para APIs Corporativas
+```
+
+O resultado e um certificado Markdown ficticio, com tecnologias, nivel, modulos, XP, data e identificador. Ele sempre deve ser tratado como material educacional, nunca como certificado oficial ou comprovante profissional.
+
+### Tool MCP `buscar_trilhas`
+
+Clientes MCP devem chamar `POST /mcp` com `Authorization: Bearer <MCP_API_TOKEN>` em cada requisicao. O argumento opcional e:
+
+```json
+{
+	"tecnologia": "Java"
+}
+```
+
+Sem argumento, a tool retorna todas as trilhas. Payloads extras, tipos incorretos, strings vazias e caracteres nao permitidos sao rejeitados.
 
 ## Arquitetura resumida
 
@@ -146,7 +224,7 @@ Sem parametro, retorna todas as trilhas. O payload precisa ser um objeto estrito
 
 Essas medidas reduzem riscos, mas nao substituem revisao de infraestrutura, rotacao de segredos, atualizacao de dependencias, logs protegidos, backup e testes de penetracao antes de uma publicacao real.
 
-## Testes
+## Como executar os testes
 
 Execute todos os testes:
 
@@ -163,6 +241,19 @@ Os testes verificam:
 - rejeicao de terminacao TLS ambigua;
 - bloqueio de Directory Traversal e caminhos inexistentes;
 - validacao de payload e consulta da tool.
+
+## Melhorias realizadas
+
+- Organizacao do servidor em modulos de configuracao, autenticacao, paths, catalogo e transporte.
+- Migracao para o SDK MCP v2 usando `@modelcontextprotocol/server` e `@modelcontextprotocol/node`.
+- Restricao de leitura ao JSON autorizado, com `path.resolve()` e `fs.realpathSync()` contra traversal e symlinks.
+- Autenticacao por Bearer token aplicada a cada chamada HTTP/MCP.
+- Validacao estrita de schemas e sanitizacao dos parametros com Zod.
+- CORS configuravel sem wildcard automatico, Helmet, limite de corpo JSON e rate limiting.
+- Tratamento de erros sem stack trace ou caminhos internos nas respostas.
+- Decisao de HTTPS documentada e validada: terminacao no reverse proxy.
+- Testes automatizados para seguranca, configuracao, catalogo, prompts e artefatos.
+- README ampliado com instalacao, operacao, limites e orientacao de aprendizagem.
 
 ## Mapa de arquivos
 
@@ -188,6 +279,16 @@ Os testes verificam:
 5. Teste entradas validas e invalidas sem remover as barreiras de seguranca.
 6. Desenhe como adicionar uma nova tool mantendo schema, autenticacao e limites.
 7. Simule uma publicacao atras de reverse proxy e documente quem termina TLS, quem autentica e quem registra logs.
+
+## O que foi aprendido durante o desafio
+
+- Um servidor funcional precisa de contratos claros entre entrada, validacao, regra de negocio e transporte.
+- A seguranca deve acontecer antes do acesso ao recurso: primeiro resolve e autoriza o path, depois le o arquivo.
+- Variaveis obrigatorias e falha no boot tornam erros de configuracao visiveis antes de atender usuarios.
+- MCP padroniza a comunicacao, mas nao substitui autenticacao, CORS, headers, rate limiting ou logs seguros.
+- Testes de seguranca sao praticos: tentar traversal, payload invalido e ambiente incompleto revela regressao rapidamente.
+- Documentar a terminacao TLS evita que uma aplicacao seja publicada com uma arquitetura de rede presumida.
+- Separar camadas torna futuras evolucoes, como SSO, OAuth e autorizacao por escopo, mais simples de testar.
 
 ## Insights para futuros profissionais
 
