@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: catalogo contem a trilha Java
+ok 1 - catalogo contem a trilha Java
+  ---
+  duration_ms: 1.4406
+  type: 'test'
+  ...
+# Subtest: comando trilha aceita tecnologia e pede plano por modulos
+ok 2 - comando trilha aceita tecnologia e pede plano por modulos
+  ---
+  duration_ms: 0.2864
+  type: 'test'
+  ...
+# Subtest: comando desafio valida tecnologia e nivel
+ok 3 - comando desafio valida tecnologia e nivel
+  ---
+  duration_ms: 0.2293
+  type: 'test'
+  ...
+# Subtest: comando certificado valida trilha e identifica o aluno
+ok 4 - comando certificado valida trilha e identifica o aluno
+  ---
+  duration_ms: 0.1804
+  type: 'test'
+  ...
+# Subtest: arquivo de desafio Java foi gerado para o aluno
+ok 5 - arquivo de desafio Java foi gerado para o aluno
+  ---
+  duration_ms: 7.0304
+  type: 'test'
+  ...
+# Subtest: arquivo de certificado Java foi gerado para o mesmo aluno
+ok 6 - arquivo de certificado Java foi gerado para o mesmo aluno
+  ---
+  duration_ms: 0.8769
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 113.497
